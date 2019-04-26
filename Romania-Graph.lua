@@ -88,4 +88,3 @@ romania = Graph:new( {'Or', 'Ne', 'Ze', 'Ia', 'Ar', 'Si', 'Fa',
 			{'Hi', 'Ef', 86}
 		     },
 		     false )
-

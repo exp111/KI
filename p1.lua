@@ -1,48 +1,82 @@
-dofile("Class.lua")
+dofile("p1utils.lua")
+dofile("Romania-Graph.lua")
 
--- FIFO
-FIFO = {}
-local FIFO_mt = Class(FIFO)
+local start = "Bu"
+local endP = "Ti"
 
-function FIFO:new()
-    return setmetatable({q = {}},FIFO_mt)
+function GetPath(node)
+	local ret = ""
+	while node.parent ~= nil do
+		ret = node.parent.neighbours[node.status] .. " -> " .. node.status .. (ret or "")
+		node = node.parent
+		if node ~= nil then
+			ret =  " -> " .. ret
+		end
+
+		if node.parent == nil then
+			ret = node.status .. ret
+		end
+	end
+
+	return ret
 end
 
-function FIFO:pop()
-    if (#self.q == 0) then
-        print("no entries!")
-    end
-
-    return table.remove(self.q, 1)
+function MapNeighbours(neighbours)
+	local ret = {}
+	for k,v in pairs(neighbours) do
+		ret[v[1]] = v[2]
+	end
+	return ret
 end
 
-function FIFO:push(n)
-    table.insert(self.q, n)
+function BFS(graph, start, endP)
+    local visited = {}
+    local frontier = FIFO:new()
+	frontier:push(Node:new(start, MapNeighbours(graph:GetNeighbours(start)), nil))
+	while true do
+		if frontier:empty() then
+			return nil
+		end
+
+		local node = frontier:pop()
+		visited[node.status] = true
+		for k,v in pairs(node.neighbours) do
+			if visited[k] == nil then
+				local newNode = Node:new(k, MapNeighbours(graph:GetNeighbours(k)), node)
+				frontier:push(newNode)
+				visited[newNode.status] = true
+
+				if k == endP then
+					return GetPath(newNode)
+				end
+			end
+		end
+	end
 end
+print("BFS: " .. BFS(romania, start, endP))
 
--- LIFO
-LIFO = {}
-local LIFO_mt = Class(LIFO)
+function DFS(graph, start, endP)
+    local visited = {}
+    local frontier = LIFO:new()
+	frontier:push(Node:new(start, MapNeighbours(graph:GetNeighbours(start)), nil))
+	while true do
+		if frontier:empty() then
+			return nil
+		end
 
-function LIFO:new()
-    return setmetatable({q = {}},LIFO_mt)
+		local node = frontier:pop()
+		visited[node.status] = true
+		for k,v in pairs(node.neighbours) do
+			if visited[k] == nil then
+				local newNode = Node:new(k, MapNeighbours(graph:GetNeighbours(k)), node)
+				frontier:push(newNode)
+				visited[newNode.status] = true
+
+				if k == endP then
+					return GetPath(newNode)
+				end
+			end
+		end
+	end
 end
-
-function LIFO:pop()
-    if (#self.q == 0) then
-        print("no entries!")
-    end
-
-    return table.remove(self.q)
-end
-
-function LIFO:push(n)
-    table.insert(self.q, n)
-end
-
--- PRIO
-
-local shit = FIFO:new()
-shit:push(1)
-shit:push(2)
-print(shit:pop())
+print("DFS: " .. DFS(romania, start, endP))
