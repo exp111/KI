@@ -53,10 +53,7 @@ end
 PRIO = {}
 local PRIO_mt = Class(PRIO)
 
-function PRIO:new()
-    local cmp = function(a,b)
-        return a > b
-    end
+function PRIO:new(cmp)
     return setmetatable({q = Heap.new(cmp)},PRIO_mt)
 end
 
@@ -80,8 +77,8 @@ end
 Node = {}
 local Node_mt = Class(Node)
 
-function Node:new(status, neighbours, parent)
-    return setmetatable({status = status, neighbours = neighbours, parent = parent}, Node_mt)
+function Node:new(status, neighbours, parent, value)
+    return setmetatable({status = status, neighbours = neighbours, parent = parent, value = value or 0}, Node_mt)
 end
 
 -- Dump
