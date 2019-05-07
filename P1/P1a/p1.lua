@@ -1,5 +1,5 @@
-dofile("p1utils.lua")
-dofile("Romania-Graph.lua")
+dofile("include/p1utils.lua")
+dofile("include/Romania-Graph.lua")
 
 local start = "Bu"
 local endP = "Ti"

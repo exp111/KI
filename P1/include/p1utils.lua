@@ -1,5 +1,5 @@
-dofile("Class.lua")
-local Heap = require("heap")
+dofile("include/Class.lua")
+dofile("include/heap.lua")
 
 -- FIFO
 FIFO = {}

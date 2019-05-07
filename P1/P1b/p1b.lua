@@ -1,4 +1,4 @@
-dofile("p1utils.lua")
+dofile("include/p1utils.lua")
 
 local grid = {}
 local size = 20

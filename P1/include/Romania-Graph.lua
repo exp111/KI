@@ -67,8 +67,8 @@ end
 
 -----------------------------------------------------------------------------
 
-dofile("Class.lua")
-dofile("Graph.lua")
+dofile("include/Class.lua")
+dofile("include/Graph.lua")
 
 romania = Graph:new( {'Or', 'Ne', 'Ze', 'Ia', 'Ar', 'Si', 'Fa', 
 		      'Va', 'Ri', 'Ti', 'Lu', 'Pi', 'Ur', 'Hi',
