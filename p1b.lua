@@ -68,8 +68,8 @@ function c(s, v)
     return math.abs(s.status.x - v.status.x) + math.abs(s.status.y - v.status.y)
 end
 
-function h(s,v)
-    return math.sqrt(math.pow(s.status.x - v.status.x, 2) + math.pow(s.status.y - v.status.y,2))
+function h(s,goal)
+    return math.sqrt(math.pow(s.status.x - goal.x, 2) + math.pow(s.status.y - goal.y,2))
 end
 
 function AStar(start, goal) --TODO: draw the shit
@@ -100,7 +100,7 @@ function AStar(start, goal) --TODO: draw the shit
                 end
                 -- UpdateVertex(s,s')
                 if s.value + c(s, v) < v.value then
-                    v.value = s.value + c(s,v) + h(s,v)
+                    v.value = s.value + c(s,v) + h(v,goal)
                     v.parent = s
                     -- TODO: maybe remove and re add?
                     if contained == false then
@@ -116,4 +116,5 @@ function AStar(start, goal) --TODO: draw the shit
 end
 
 blocked[3][1] = true
-print(AStar({x=1, y=1}, {x=20, y=20}))
+blocked[5][2] = true
+print(AStar({x=1, y=1}, {x=7, y=2}))
