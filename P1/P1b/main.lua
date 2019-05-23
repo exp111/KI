@@ -4,10 +4,13 @@ function love.load()
     -- Init Grid
     grid = {}
     size = 20
+    visited = {}
     for x = 1, size, 1 do
         grid[x] = {}
+        visited[x] = {}
         for y = 1, size, 1 do
             grid[x][y] = Node:new({x=x,y=y}, nil, nil, 0)
+            visited[x][y] = false
         end
     end
     boxSize = 25
@@ -49,6 +52,20 @@ function love.draw()
     -- Draw Board
     love.graphics.setColor(255, 255, 255)
     love.graphics.rectangle("fill", 0, 0, size * boxSize, size * boxSize)
+    -- Draw blocked & visited fields
+    for x = 1, size, 1 do
+        for y = 1, size, 1 do
+            if grid[x][y] == nil then
+                love.graphics.setColor(0, 0, 0)
+                love.graphics.rectangle("fill", (x - 1) * boxSize, (y - 1) * boxSize, boxSize, boxSize)
+            end
+
+            if visited[x][y] == true then
+                love.graphics.setColor(255, 0, 0)
+                love.graphics.rectangle("fill", (x - 1) * boxSize, (y - 1) * boxSize, boxSize, boxSize)
+            end
+        end
+    end
     -- Draw Start
     love.graphics.setColor(0, 0, 255)
     love.graphics.rectangle("fill", (gStart.x - 1) * boxSize, (gStart.y - 1) * boxSize, boxSize, boxSize)
@@ -60,15 +77,6 @@ function love.draw()
     while node ~= nil do
         love.graphics.rectangle("line", (node.status.x - 1) * boxSize, (node.status.y - 1) * boxSize, boxSize, boxSize)
         node = node.parent
-    end
-    -- Draw blocked fields
-    love.graphics.setColor(0, 0, 0)
-    for x = 1, size, 1 do
-        for y = 1, size, 1 do
-            if grid[x][y] == nil then
-                love.graphics.rectangle("fill", (x - 1) * boxSize, (y - 1) * boxSize, boxSize, boxSize)
-            end
-        end
     end
 end
 
@@ -131,7 +139,7 @@ end
 
 function AStar(start, goal) --TODO: draw the shit
     --Init
-    local open = PRIO:new(function(a,b) return a.value > b.value end)
+    local open = PRIO:new(function(a,b) return a.value + a.h > b.value + b.h end)
     local closed = {}
     open:push(grid[start.x][start.y])
     
@@ -145,6 +153,7 @@ function AStar(start, goal) --TODO: draw the shit
         closed[s] = true
         for _,v in pairs(GetNeighbours(s.status)) do
             --print("Neighbour: x:" .. v.status.x .. ", y:" .. v.status.y .. ", val:" .. v.value)
+            visited[v.status.x][v.status.y] = true
             if v ~= nil then
                 local contained = contains(open.q:GetAsTable(), v)
                 if closed[v] == nil then
@@ -152,13 +161,14 @@ function AStar(start, goal) --TODO: draw the shit
                         --print("Setting high")
                         v.value = 1e309
                         v.parent = nil
+                        v.h = 0
                     end
                 end
                 -- UpdateVertex(s,s')
                 if s.value + c(s, v) < v.value then
-                    v.value = s.value + c(s,v) + h(v,goal)
+                    v.value = s.value + c(s,v)
+                    v.h = h(v,goal)
                     v.parent = s
-                    -- TODO: maybe remove and re add?
                     if contained == false then
                         --print("Pushed v")
                         open:push(v)

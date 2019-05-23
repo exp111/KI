@@ -75,7 +75,7 @@ end
 function AStar(start, goal) --TODO: draw the shit
     --Init
     InitGrid()
-    local open = PRIO:new(function(a,b) return a.value > b.value end)
+    local open = PRIO:new(function(a,b) return a.value + a.h > b.value + b.h end)
     local closed = {}
     open:push(grid[start.x][start.y])
     
@@ -100,7 +100,8 @@ function AStar(start, goal) --TODO: draw the shit
                 end
                 -- UpdateVertex(s,s')
                 if s.value + c(s, v) < v.value then
-                    v.value = s.value + c(s,v) + h(v,goal)
+                    v.value = s.value + c(s,v) 
+                    v.h = h(v,goal)
                     v.parent = s
                     -- TODO: maybe remove and re add?
                     if contained == false then
