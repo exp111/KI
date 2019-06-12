@@ -3,7 +3,7 @@ dofile("include/Queens.lua")
 queens = nil
 function love.load()
     queens = Queens:new({1,1,1,1,1,1,1,1})
-    queens:checkHits()
+    queens:heuristic()
     size = #queens.grid
     boxSize = 100
     queenImg = love.graphics.newImage("Queen.png")

@@ -12,9 +12,9 @@ local Queens_mt = Class(Queens)
 function Queens:new(initialState)
     -- Init Grid
     local grid = {}
-    for x = 1, 8 do
+    for x = 1, #initialState do
         grid[x] = {}
-        for y = 1, 8 do
+        for y = 1, #initialState do
             grid[x][y] = Field:new(initialState[x] == y)
         end
     end
@@ -58,10 +58,21 @@ function Queens:hits(pos)
     return count
 end
 
-function Queens:checkHits()
+function Queens:fitness()
+    local hList = {}
+    local max = 0
+    for i = 1, #self.grid do
+        hList[i] = self:hits({x = i, y = self.initialState[i]})
+        max = max + hList[i]
+    end
+    return {hList = hList, max = max}
+end
+
+function Queens:heuristic()
+    local fit = self:fitness()
     for x = 1, #self.grid do
         for y = 1, #self.grid do
-            self.grid[x][y].h = self:hits({x = x, y = y})
+            self.grid[x][y].h = self:hits({x = x, y = y}) - fit.hList[x] + fit.max
         end
     end
 end
@@ -73,5 +84,5 @@ end
 
 function Queens:action(a,b)
     self:transition(a,b)
-    self:checkHits()
+    self:heuristic()
 end
