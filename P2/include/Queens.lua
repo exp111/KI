@@ -22,7 +22,8 @@ function Queens:new(initialState)
     return setmetatable({
         initialState = initialState,
         transisionModel = transition,
-        grid = grid
+        grid = grid,
+        fit = 1e30
     }, Queens_mt)
 end
 
@@ -70,6 +71,7 @@ end
 
 function Queens:heuristic()
     local fit = self:fitness()
+    self.fit = fit.max
     for x = 1, #self.grid do
         for y = 1, #self.grid do
             self.grid[x][y].h = self:hits({x = x, y = y}) - fit.hList[x] + fit.max
