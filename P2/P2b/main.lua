@@ -1,7 +1,6 @@
 dofile("include/Queens.lua")
 dofile("include/prio.lua")
 
-Individual = {state = {}, fitness = 0}
 function mutate(x)
     if math.random(10) < 3 then
         x[math.random(#x)] = math.random(#x)
@@ -11,15 +10,18 @@ end
 
 function reproduce(x, y)
     local c = math.random(#x.initialState)
-    local child = {}
+    local child1 = {}
+    local child2 = {}
     for i = 1, #x.initialState do
         if i <= c then
-            table.insert(child, x.initialState[i])
+            table.insert(child1, x.initialState[i])
+            table.insert(child2, y.initialState[i])
         else
-            table.insert(child, y.initialState[i])
+            table.insert(child2, x.initialState[i])
+            table.insert(child1, y.initialState[i])
         end
     end
-    return child
+    return {child1, child2}
 end
 
 function compare(a,b)
@@ -36,24 +38,53 @@ end
 
 function geneticAlgorithm(population)
     local newPopulation = PRIO:new(compare)
-    local n = #population.q / 2 --Remove last ones cuz fuck them
+    local n = #population.q
     for j = 1, n, 2 do
         local x = population:pop()
         local y = population:pop()
-        local child = reproduce(x, y)
-        local child1 = Queens:new(mutate(child))
+        local children = reproduce(x, y)
+        local child1 = Queens:new(mutate(children[1]))
         child1:heuristic()
-        local child2 = Queens:new(mutate(child))
+        local child2 = Queens:new(mutate(children[2]))
         child2:heuristic()
         newPopulation:push(child1)
         newPopulation:push(child2)
+    end
+    newPopulation = selectFittest(newPopulation.q:GetAsTable())
 
-        if j ~= n then
-            newPopulation:push(x)
-            newPopulation:push(y)
+    return newPopulation
+end
+
+function selectFittest(pop)
+    local val = 0
+    local size = #pop
+
+    -- Average Fitness
+    for _,v in pairs(pop) do
+        val = val + v.fit
+    end
+    val = val / #pop
+
+    s = 0
+    --Stalin Sort
+    for i = 1, size do
+        if pop[i - s].fit > val then
+            table.remove(pop, i - s)
+            s = s + 1
         end
     end
-    return newPopulation
+
+    --Fill up (with random duplicates)
+    local oldSize = #pop
+
+    while #pop ~= size do
+        table.insert(pop, pop[math.random(oldSize)])
+    end
+
+    --Heapify again
+    local prio = PRIO:new(compare)
+    prio.q = prio.q:Heapify(pop, compare)
+    return prio
 end
 
 function love.load()
@@ -105,7 +136,6 @@ function love.keypressed(key)
             population = geneticAlgorithm(population)
             queens = population:peek()
         end
-        print("Size: " .. population.q:Size())
-        print(queens.fit)
+        print("Fitness: " .. queens.fit)
     end
 end
