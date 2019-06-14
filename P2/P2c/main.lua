@@ -1,7 +1,7 @@
 dofile("include/Queens.lua")
 
 function love.load()
-    queens = Queens:new({1,1,1,1,1,1,1,1})
+    queens = Queens:new({1,1})
     queens:heuristic()
     size = #queens.grid
     boxSize = 100
@@ -45,7 +45,7 @@ function love.keypressed(key)
     end
     if key == 's' then
         currSolution = currSolution + 1
-        if currSolution >= #solutions then
+        if currSolution > #solutions then
             currSolution = #solutions > 0 and 1 or 0
         end
         if currSolution ~= 0 then
