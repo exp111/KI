@@ -1,7 +1,7 @@
 dofile("include/Queens.lua")
 
 function love.load()
-    queens = Queens:new({1,1})
+    queens = Queens:new({1, 1, 1, 1, 1, 1, 1, 1})
     queens:heuristic()
     size = #queens.grid
     boxSize = 100
@@ -56,28 +56,32 @@ function love.keypressed(key)
 end
 
 function Backtracking(max)
-    local ret = Backtrack({{}}, max)
+    local ret = Backtrack({{nil, nil, nil, 4, nil, nil, 2}}, max, 1)
     table.remove(ret, 1) -- last wip assignment is still in queue
     return ret
 end
 
-function Backtrack(assignment, max)
+function Backtrack(assignment, max, i)
     local cur = assignment[1] -- current wip is always in front
-    if #cur == max then
+    if i > max then
         local curCopy = copy(cur)
         table.insert(assignment, curCopy)
         return assignment
     end
 
+    if cur[i] ~= nil then -- is the current already given? -> skip
+        return Backtrack(assignment, max, i + 1)
+    end
+
     for j = 1, max do
         local cur = assignment[1]
-        table.insert(cur, j) -- try new state
+        cur[i] = j -- try new state
         local queen = Queens:new2(cur, max)
         queen:heuristic()
         if queen.fit == 0 then -- valid
-            Backtrack(assignment, max) -- no need to add cuz everything is pointered
+            Backtrack(assignment, max, i + 1) -- no need to add cuz everything is pointered
         end
-        table.remove(cur) -- remove the state so we can do a new one -> if it was valid solution is already added else fuck it
+        cur[i] = nil -- remove the state so we can do a new one -> if it was valid solution is already added else fuck it
     end
     return assignment
 end

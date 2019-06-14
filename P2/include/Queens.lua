@@ -69,8 +69,10 @@ function Queens:fitness()
     local hList = {}
     local max = 0
     for i = 1, #self.initialState do
-        hList[i] = self:hits({x = i, y = self.initialState[i]})
-        max = max + hList[i]
+        if self.initialState[i] ~= nil then
+            hList[i] = self:hits({x = i, y = self.initialState[i]})
+            max = max + hList[i]
+        end
     end
     return {hList = hList, max = max}
 end
