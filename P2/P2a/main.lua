@@ -1,6 +1,5 @@
 dofile("include/Queens.lua")
 
-queens = nil
 function love.load()
     queens = Queens:new({1,1,1,1,1,1,1,1})
     queens:heuristic()
