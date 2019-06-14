@@ -35,9 +35,9 @@ function love.draw()
             end
             love.graphics.setColor(grey)
             love.graphics.rectangle("line", boxPos.x, boxPos.y, boxSize, boxSize)
-            if cur.player == 1 then
+            if x == wumpus.player.pos.x and y == wumpus.player.pos.y then
                 love.graphics.draw(playerImg, boxPos.x + boxSize / 2, boxPos.y + boxSize / 2, 
-                wumpus.rotation, playerImgFactor, playerImgFactor, playerImgWidth, playerImgHeight)
+                wumpus.player.rotation, playerImgFactor, playerImgFactor, playerImgWidth, playerImgHeight)
             end
         end
     end
@@ -54,15 +54,22 @@ end
 
 function love.keypressed(key)
     if key == 'l' then
-        wumpus.rotation = wumpus.rotation - halfPi
-        if wumpus.rotation < 0 then
-            wumpus.rotation = wumpus.rotation + twoPi
+        wumpus.player.rotation = wumpus.player.rotation - halfPi
+        if wumpus.player.rotation < 0 then
+            wumpus.player.rotation = wumpus.player.rotation + twoPi
         end
     end
     if key == 'r' then
-        wumpus.rotation = wumpus.rotation + halfPi
-        if wumpus.rotation > twoPi then
-            wumpus.rotation = wumpus.rotation - twoPi
+        wumpus.player.rotation = wumpus.player.rotation + halfPi
+        if wumpus.player.rotation > twoPi then
+            wumpus.player.rotation = wumpus.player.rotation - twoPi
         end
+    end
+    if key == 'f' then
+        local delta = {}
+        delta.x = ((wumpus.player.rotation / halfPi) % 2 == 0) and 0 or 1
+        delta.x = wumpus.player.rotation > halfPi and -1 or 1
+        delta.y = 0
+        wumpus:move({x = wumpus.player.pos.x + delta.x, y = wumpus.player.pos.y + delta.y})
     end
 end

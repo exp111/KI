@@ -56,7 +56,7 @@ function love.keypressed(key)
 end
 
 function Backtracking(max)
-    local ret = Backtrack({{nil, nil, nil, 4, nil, nil, 2}}, max, 1)
+    local ret = Backtrack({{}}, max, 1)
     table.remove(ret, 1) -- last wip assignment is still in queue
     return ret
 end
