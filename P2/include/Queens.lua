@@ -9,12 +9,13 @@ end
 
 Queens = {}
 local Queens_mt = Class(Queens)
-function Queens:new(initialState)
+
+function Queens:new2(initialState, size)
     -- Init Grid
     local grid = {}
-    for x = 1, #initialState do
+    for x = 1, size do
         grid[x] = {}
-        for y = 1, #initialState do
+        for y = 1, size do
             grid[x][y] = Field:new(initialState[x] == y)
         end
     end
@@ -27,10 +28,15 @@ function Queens:new(initialState)
     }, Queens_mt)
 end
 
+function Queens:new(initialState)
+    return Queens:new2(initialState, #initialState)
+end
+
 function Queens:hits(pos)
     local count = 0
     for i = 1, #self.grid do
         --Horizontal
+        --print("#grid: " .. #self.grid .. " i: " .. i .. " pos.y: " .. pos.y .. " #grid[i]: " .. #self.grid[i])
         if pos.x ~= i and self.grid[i][pos.y].queen == 1 then
             count = count + 1
         end
@@ -62,7 +68,7 @@ end
 function Queens:fitness()
     local hList = {}
     local max = 0
-    for i = 1, #self.grid do
+    for i = 1, #self.initialState do
         hList[i] = self:hits({x = i, y = self.initialState[i]})
         max = max + hList[i]
     end
@@ -74,7 +80,7 @@ function Queens:heuristic()
     self.fit = fit.max
     for x = 1, #self.grid do
         for y = 1, #self.grid do
-            self.grid[x][y].h = self:hits({x = x, y = y}) - fit.hList[x] + fit.max
+            self.grid[x][y].h = self:hits({x = x, y = y}) - (fit.hList[x] or 0) + fit.max
         end
     end
 end
