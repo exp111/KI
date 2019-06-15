@@ -29,6 +29,9 @@ end
 Wumpus = {}
 local Wumpus_mt = Class(Wumpus)
 
+halfPi = math.pi / 2
+twoPi = math.pi * 2
+
 function Wumpus:new(startPos, size)
     -- Init Grid
     local grid = {}
@@ -84,6 +87,7 @@ end
 
 function Wumpus:action(key)
     self.score = self.score - (self.scoreBoard[key] or 0)
+    self.player.bump = 0
 end
 
 function Wumpus:getDelta(rotation)
@@ -93,6 +97,18 @@ function Wumpus:getDelta(rotation)
     delta.x = delta.x == 1 and (rotation % twoPi > halfPi and -1 or 1) or 0
     delta.y = delta.y == 1 and (rotation % twoPi == 0 and -1 or 1) or 0
     return delta
+end
+
+function Wumpus:forward()
+    local delta = self:getDelta(self.player.rotation)
+    local newPos = {x = self.player.pos.x + delta.x, y = self.player.pos.y + delta.y}
+    if newPos.x >= 1 and newPos.x <= #self.grid and newPos.y >= 1 and newPos.y <= #self.grid then
+        local result = self:move(newPos)
+        return result
+    else
+        self.player.bump = 1
+        return -1
+    end
 end
 
 function Wumpus:getPercept(pos, rotation)
@@ -122,10 +138,17 @@ function Wumpus:getPercept(pos, rotation)
     end
     percept.glitter = self.grid[pos.x][pos.y].gold == 1 and 1 or 0
     percept.scream = self.grid[pos.x][pos.y].wumpus == 1 and 1 or 0
-    local delta = self.getDelta(pos, rotation)
-    local newPos = {x = pos.x + delta.x, y = pos.y + delta.y}
-    if newPos.x < 1 or newPos.x > size or newPos.y < 1 or newPos.y > size then --OOB
-        percept.bump = 1
-    end
+    percept.stench = percept.stench == 1 and 1 or percept.scream == 1 and 1 or 0
+    percept.bump = self.player.bump
     return percept
+end
+
+function Wumpus:rotate(rad)
+    self.player.rotation = wumpus.player.rotation + rad
+    if self.player.rotation < 0 then
+        self.player.rotation = self.player.rotation + twoPi
+    end
+    if self.player.rotation > twoPi then
+        self.player.rotation = self.player.rotation - twoPi
+    end
 end

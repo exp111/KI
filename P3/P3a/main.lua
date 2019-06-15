@@ -70,37 +70,28 @@ function love.keypressed(key)
     wumpus:action(key)
     
     if key == 'l' then -- LEFT
-        wumpus.player.rotation = wumpus.player.rotation - halfPi
-        if wumpus.player.rotation < 0 then
-            wumpus.player.rotation = wumpus.player.rotation + twoPi
-        end
+        wumpus:rotate(-halfPi)
         eventText = "Turned left"
     end
     if key == 'r' then -- RIGHT
-        wumpus.player.rotation = wumpus.player.rotation + halfPi
-        if wumpus.player.rotation > twoPi then
-            wumpus.player.rotation = wumpus.player.rotation - twoPi
-        end
+        wumpus:rotate(halfPi)
         eventText = "Turned right"
     end
     if key == 'f' then -- FORWARD
-        local delta = wumpus:getDelta(wumpus.player.rotation)
-        local newPos = {x = wumpus.player.pos.x + delta.x, y = wumpus.player.pos.y + delta.y}
-        if newPos.x >= 1 and newPos.x <= size and newPos.y >= 1 and newPos.y <= size then
-            local result = wumpus:move(newPos)
-            if result == 0 then
-                eventText = "Moved forward"
-            end
-            if result == 1 then
-                eventText = "The wumpus ate you"
-                wumpus:action('w')
-            end
-            if result == 2 then
-                eventText = "You fell down a pit"
-                wumpus:action('p')
-            end
-        else
+        local result = wumpus:forward()
+        if result == -1 then
             eventText = "Can't move"
+        end
+        if result == 0 then
+            eventText = "Moved forward"
+        end
+        if result == 1 then
+            eventText = "The wumpus ate you"
+            wumpus:action('w')
+        end
+        if result == 2 then
+            eventText = "You fell down a pit"
+            wumpus:action('p')
         end
     end
     if key == 'g' then -- GRAB
