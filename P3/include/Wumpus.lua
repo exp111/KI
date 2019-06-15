@@ -11,7 +11,8 @@ function Field:new(visited, pit)
         glitter = 0,
         gold = 0,
         pit = pit,
-        wumpus = 0
+        wumpus = 0,
+        wumpusDead = 0
         }, Field_mt)
 end
 
@@ -22,7 +23,8 @@ function Player:new(pos)
     return setmetatable({
         pos = pos,
         rotation = 0,
-        hasGold = 0
+        hasGold = 0,
+        arrows = 1
         }, Field_mt)
 end
 
@@ -69,14 +71,15 @@ function Wumpus:new(startPos, size)
         score = 0,
         player = Player:new(startPos),
         scoreBoard = scoreBoard,
-        startPos = startPos
+        startPos = startPos,
+        scream = 0
     }, Wumpus_mt)
 end
 
 function Wumpus:move(pos)
     self.player.pos = pos
     self.grid[pos.x][pos.y].visited = 1
-    if self.grid[pos.x][pos.y].wumpus == 1 then
+    if self.grid[pos.x][pos.y].wumpus == 1 and self.grid[pos.x][pos.y].wumpusDead == 0 then
         return 1
     end
     if self.grid[pos.x][pos.y].pit == 1 then
@@ -88,6 +91,7 @@ end
 function Wumpus:action(key)
     self.score = self.score - (self.scoreBoard[key] or 0)
     self.player.bump = 0
+    self.scream = 0
 end
 
 function Wumpus:getDelta(rotation)
@@ -137,8 +141,8 @@ function Wumpus:getPercept(pos, rotation)
         end
     end
     percept.glitter = self.grid[pos.x][pos.y].gold == 1 and 1 or 0
-    percept.scream = self.grid[pos.x][pos.y].wumpus == 1 and 1 or 0
-    percept.stench = percept.stench == 1 and 1 or percept.scream == 1 and 1 or 0
+    percept.stench = percept.stench == 1 and 1 or self.grid[wumpus.player.pos.x][wumpus.player.pos.y].wumpus == 1 and 1 or 0
+    percept.scream = self.scream
     percept.bump = self.player.bump
     return percept
 end
@@ -151,4 +155,26 @@ function Wumpus:rotate(rad)
     if self.player.rotation > twoPi then
         self.player.rotation = self.player.rotation - twoPi
     end
+end
+
+function Wumpus:shoot()
+    if self.player.arrows <= 0 then
+        return false 
+    end
+
+    self.player.arrows = self.player.arrows - 1
+
+    local delta = self:getDelta(self.player.rotation)
+    local arrowPos = { x = self.player.pos.x, y = self.player.pos.y }
+    repeat
+        arrowPos.x = arrowPos.x + delta.x
+        arrowPos.y = arrowPos.y + delta.y
+        if self.grid[arrowPos.x][arrowPos.y].wumpus == 1 and self.grid[arrowPos.x][arrowPos.y].wumpusDead == 0 then
+            self.scream = 1
+            self.grid[arrowPos.x][arrowPos.y].wumpusDead = 1
+            break 
+        end
+    until arrowPos.x >= 1 and arrowPos.x <= #self.grid and arrowPos.y >= 1 and arrowPos.y <= #self.grid
+
+    return true
 end

@@ -104,7 +104,11 @@ function love.keypressed(key)
         end
     end
     if key == 's' then -- TODO: SHOOT
-        eventText = "Shot Arrow"
+        if wumpus:shoot() then
+            eventText = "Shot Arrow"
+        else
+            eventText = "No Arrows"
+        end
     end
     if key == 'c' then -- TODO: c
         if wumpus.player.pos.x == wumpus.startPos.x and wumpus.player.pos.y == wumpus.startPos.y then
