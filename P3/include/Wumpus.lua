@@ -24,7 +24,8 @@ function Player:new(pos)
         pos = pos,
         rotation = 0,
         hasGold = 0,
-        arrows = 1
+        arrows = 1,
+        dead = 0
         }, Field_mt)
 end
 
@@ -80,9 +81,11 @@ function Wumpus:move(pos)
     self.player.pos = pos
     self.grid[pos.x][pos.y].visited = 1
     if self.grid[pos.x][pos.y].wumpus == 1 and self.grid[pos.x][pos.y].wumpusDead == 0 then
+        self.player.dead = 1
         return 1
     end
     if self.grid[pos.x][pos.y].pit == 1 then
+        self.player.dead = 1
         return 2
     end
     return 0 -- 0 if ok, 1 if wumpus, 2 if pit
@@ -165,16 +168,16 @@ function Wumpus:shoot()
     self.player.arrows = self.player.arrows - 1
 
     local delta = self:getDelta(self.player.rotation)
-    local arrowPos = { x = self.player.pos.x, y = self.player.pos.y }
-    repeat
-        arrowPos.x = arrowPos.x + delta.x
-        arrowPos.y = arrowPos.y + delta.y
+    local arrowPos = { x = self.player.pos.x + delta.x, y = self.player.pos.y + delta.y }
+    while arrowPos.x >= 1 and arrowPos.x <= #self.grid and arrowPos.y >= 1 and arrowPos.y <= #self.grid do
         if self.grid[arrowPos.x][arrowPos.y].wumpus == 1 and self.grid[arrowPos.x][arrowPos.y].wumpusDead == 0 then
             self.scream = 1
             self.grid[arrowPos.x][arrowPos.y].wumpusDead = 1
             break 
         end
-    until arrowPos.x >= 1 and arrowPos.x <= #self.grid and arrowPos.y >= 1 and arrowPos.y <= #self.grid
+        arrowPos.x = arrowPos.x + delta.x
+        arrowPos.y = arrowPos.y + delta.y
+    end
 
     return true
 end

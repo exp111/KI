@@ -67,6 +67,9 @@ function love.update()
 end
 
 function love.keypressed(key)
+    if wumpus.player.dead == 1 then
+        return
+    end
     wumpus:action(key)
     
     if key == 'l' then -- LEFT
