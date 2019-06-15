@@ -116,6 +116,13 @@ function love.keypressed(key)
         eventText = "Shot Arrow"
     end
     if key == 'c' then -- TODO: c
-        
+        if wumpus.player.pos.x == wumpus.startPos.x and wumpus.player.pos.y == wumpus.startPos.y then
+            eventText = "Climbed out of the cave"
+            if wumpus.player.hasGold == 1 then
+                wumpus.score = wumpus.score + 1000
+            end
+        else
+            eventText = "Can't climb from here"
+        end
     end
 end

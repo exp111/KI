@@ -57,15 +57,16 @@ function Wumpus:new(startPos, size)
         g = 1,
         s = 11,
         c = 1,
-        p = 1000,
-        w = 1000
+        p = 1000, --Pit
+        w = 1000 --Wumpus
     }
 
     return setmetatable({
         grid = grid,
         score = 0,
         player = Player:new(startPos),
-        scoreBoard = scoreBoard
+        scoreBoard = scoreBoard,
+        startingPos = startPos
     }, Wumpus_mt)
 end
 
