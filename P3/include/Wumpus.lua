@@ -69,7 +69,7 @@ function Wumpus:new(startPos, size)
         score = 0,
         player = Player:new(startPos),
         scoreBoard = scoreBoard,
-        startingPos = startPos
+        startPos = startPos
     }, Wumpus_mt)
 end
 
