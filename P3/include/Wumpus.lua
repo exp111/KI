@@ -73,7 +73,8 @@ function Wumpus:new(startPos, size)
         player = Player:new(startPos),
         scoreBoard = scoreBoard,
         startPos = startPos,
-        scream = 0
+        scream = 0,
+        finished = 0
     }, Wumpus_mt)
 end
 
@@ -92,9 +93,81 @@ function Wumpus:move(pos)
 end
 
 function Wumpus:action(key)
-    self.score = self.score - (self.scoreBoard[key] or 0)
+    if wumpus.player.dead == 1 then
+        return "You're dead"
+    end
+    if wumpus.finished == 1 then
+        return "You already climbed out"
+    end
+    
+    -- Reset
     self.player.bump = 0
     self.scream = 0
+    
+    if key == 'l' then -- LEFT
+        self:addScore(-1)
+        wumpus:rotate(-halfPi)
+        return "Turned left"
+    end
+    if key == 'r' then -- RIGHT
+        self:addScore(-1)
+        wumpus:rotate(halfPi)
+        return "Turned right"
+    end
+    if key == 'f' then -- FORWARD
+        self:addScore(-1)
+        local result = wumpus:forward()
+        if result == -1 then
+            return "Can't move"
+        end
+        if result == 0 then
+           return "Moved forward"
+        end
+        if result == 1 then
+            self:addScore(-1000)
+            return "The wumpus ate you"
+        end
+        if result == 2 then
+            self:addScore(-1000)
+            return "You fell down a pit"
+        end
+    end
+    if key == 'g' then -- GRAB
+        self:addScore(-1)
+        if wumpus.grid[wumpus.player.pos.x][wumpus.player.pos.y].gold == 1 then
+            wumpus.player.hasGold = 1
+            wumpus.grid[wumpus.player.pos.x][wumpus.player.pos.y].gold = 0
+            return "Grabbed Gold"
+        else
+            return "No Gold"
+        end
+    end
+    if key == 's' then -- SHOOT
+        if wumpus:shoot() then
+            self:addScore(-11) --TODO: 10 for shooting the arrow AND 1 for action?
+            return "Shot Arrow"
+        else
+            self:addScore(-1) --TODO: is this a valid action
+            return "No Arrows"
+        end
+    end
+    if key == 'c' then -- CLIMB
+        self:addScore(-1)
+        if wumpus.player.pos.x == wumpus.startPos.x and wumpus.player.pos.y == wumpus.startPos.y then
+            if wumpus.player.hasGold == 1 then
+                self:addScore(1000)
+            end
+            self.finished = 1
+            
+            return "Climbed out of the cave"
+        else
+            return "Can't climb from here"
+        end
+    end
+end
+
+function Wumpus:addScore(val)
+    self.score = self.score + val
 end
 
 function Wumpus:getDelta(rotation)
