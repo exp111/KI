@@ -28,23 +28,28 @@ function concat(t1, t2)
 end
 
 function concatUnique(t1, t2)
-    local t3 = copy(t1)
+    local t3 = {}
     local check = {}
-    for _,v in pairs(t2) do
-        local stringed = stringify(v)
+    for i = 1, #t1 + #t2 do
+        local cur = i <= #t1 and t1[i] or t2[i]
+        local stringed = stringify(cur)
         if not check[stringed] then
             check[stringed] = true
-            table.insert(t3, v)
+            table.insert(t3, cur)
         end
     end
     return t3
 end
 
 function containsClauses(t1, t2)
-    for _,v in pairs(t2) do
-        if contains(t1, v) then
+    local check = {}
+    for i = 1, #t1 + #t2 do
+        local cur = i <= #t1 and t1[i] or t2[i]
+        local stringed = stringify(cur)
+        if check[stringed] then
             return true
         end
+        check[stringed] = true
     end
     return false
 end
@@ -89,14 +94,16 @@ function PLResolution(kb, alpha)
             local ci = clauses[i]
             for j = i + 1, #clauses do
                 local cj = clauses[j]
-                print("i: " .. i .. ", j: " .. j .. ", Ci: " .. stringify(ci) .. ", Cj: " .. stringify(cj))
+                --print("i: " .. i .. ", j: " .. j .. ", Ci: " .. stringify(ci) .. ", Cj: " .. stringify(cj))
                 local resolvents = PLResolve(ci, cj)
-                print("Resolvents: " .. stringify(resolvents))
+                --print("Resolvents: " .. stringify(resolvents))
                 if containsEmpty(resolvents) then return true end
                 new = concatUnique(new, resolvents)
-                if containsClauses(new, clauses) then return false end -- new ⊆ kb
             end
         end
+        print("new: " .. stringify(new))
+        print("clauses: " .. stringify(clauses))
+        if containsClauses(new, clauses) then return false end -- new ⊆ kb
         clauses = {}
         clauses = concat(clauses, new)
         clauses = concat(clauses, alpha)
