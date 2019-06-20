@@ -31,7 +31,7 @@ function concatUnique(t1, t2)
     local t3 = {}
     local check = {}
     for i = 1, #t1 + #t2 do
-        local cur = i <= #t1 and t1[i] or t2[i]
+        local cur = i <= #t1 and t1[i] or t2[i - #t1]
         local stringed = stringify(cur)
         if not check[stringed] then
             check[stringed] = true
@@ -44,7 +44,7 @@ end
 function containsClauses(t1, t2)
     local check = {}
     for i = 1, #t1 + #t2 do
-        local cur = i <= #t1 and t1[i] or t2[i]
+        local cur = i <= #t1 and t1[i] or t2[i - #t1]
         local stringed = stringify(cur)
         if check[stringed] then
             return true
@@ -101,8 +101,8 @@ function PLResolution(kb, alpha)
                 new = concatUnique(new, resolvents)
             end
         end
-        print("new: " .. stringify(new))
-        print("clauses: " .. stringify(clauses))
+        --print("new: " .. stringify(new))
+        --print("clauses: " .. stringify(clauses))
         if containsClauses(new, clauses) then return false end -- new ⊆ kb
         clauses = {}
         clauses = concat(clauses, new)
@@ -144,6 +144,6 @@ end
 --ALPHA = {{"-y"}}
 --print(PLResolution(KB, ALPHA))
 
-KB = {{"-p21", "b11"}, {"-b11", "p12", "p21"}, {"-p12", "b11"}, {"-b11"}}
-ALPHA = {{"p12"}}
-print(PLResolution(KB, ALPHA))
+--KB = {{"-p21", "b11"}, {"-b11", "p12", "p21"}, {"-p12", "b11"}, {"-b11"}}
+--ALPHA = {{"-p12"}}
+--print(PLResolution(KB, ALPHA))
