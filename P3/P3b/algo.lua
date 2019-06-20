@@ -1,10 +1,9 @@
--- Dump
-function dump(o)
+function stringify(o)
     if type(o) == 'table' then
        local s = '{ '
        for k,v in pairs(o) do
           if type(k) ~= 'number' then k = '"'..k..'"' end
-          s = s .. '['..k..'] = ' .. dump(v) .. ','
+          s = s .. '['..k..'] = ' .. stringify(v) .. ','
        end
        return s .. '} '
     else
@@ -32,8 +31,9 @@ function concatUnique(t1, t2)
     local t3 = copy(t1)
     local check = {}
     for _,v in pairs(t2) do
-        if not check[v] then
-            check[v] = true
+        local stringed = stringify(v)
+        if not check[stringed] then
+            check[stringed] = true
             table.insert(t3, v)
         end
     end
@@ -82,19 +82,19 @@ end
 
 function PLResolution(kb, alpha)
     local clauses = concat(kb, alpha) -- kb ∧ ¬α
-    --print("Clauses: " .. dump(clauses))
+    --print("Clauses: " .. stringify(clauses))
     while #clauses > 1 do
         local new = {}
         for i = 1, #clauses do
             local ci = clauses[i]
             for j = i + 1, #clauses do
                 local cj = clauses[j]
-                --print("i: " .. i .. ", j: " .. j .. ", Ci: " .. dump(ci) .. ", Cj: " .. dump(cj))
+                print("i: " .. i .. ", j: " .. j .. ", Ci: " .. stringify(ci) .. ", Cj: " .. stringify(cj))
                 local resolvents = PLResolve(ci, cj)
-                --print("Resolvents: " .. dump(resolvents))
+                print("Resolvents: " .. stringify(resolvents))
                 if containsEmpty(resolvents) then return true end
                 new = concatUnique(new, resolvents)
-                if containsClauses(new, kb) then return false end -- new ⊆ kb
+                if containsClauses(new, clauses) then return false end -- new ⊆ kb
             end
         end
         clauses = {}
@@ -105,28 +105,38 @@ function PLResolution(kb, alpha)
 end
 
 function PLResolve(ci, cj)
-    local con = concat(ci, cj)
-    --print("PLResolve: " .. dump(con))
     local ret = {}
-    for k, v in pairs(con) do
+    --print("PLResolve: ci: " .. stringify(ci) .. ", cj: " .. stringify(cj))
+    for k,v in pairs(ci) do
+        local con = concat(ci, cj)
         --print("k: " .. k .. ", cur: " .. v)
-        local neg = ""
-        if string.find(v, "-") then
-            neg = string.gsub(v, "-", "")
-        else
-            neg = "-" .. v
-        end
+        local neg = negate(v)
+        
         if contains(cj, neg) then --search for opposite clause
             --print("Resolved: " .. v)
             con = remove(con, v)
             con = remove(con, neg)
-            print(dump(con))
+            --print(stringify(con))
             table.insert(ret, con)
         end
     end
     return ret
 end
 
+function negate(c)
+    local neg = ""
+    if string.find(c, "-") then
+        neg = string.gsub(c, "-", "")
+    else
+        neg = "-" .. c
+    end
+    return neg
+end
+
 --KB = {{"x", "y"}, {"-x"}}
 --ALPHA = {{"-y"}}
 --print(PLResolution(KB, ALPHA))
+
+KB = {{"-p21", "b11"}, {"-b11", "p12", "p21"}, {"-p12", "b11"}, {"-b11"}}
+ALPHA = {{"p12"}}
+print(PLResolution(KB, ALPHA))

@@ -84,5 +84,5 @@ function CNF:tell(rule) -- clauses: {"x", "y", "-x"}
 end
 
 function CNF:ask(alpha)
-    return PLResolution(self.rules, {{alpha}})
+    return PLResolution(self.rules, {{negate(alpha)}})
 end
