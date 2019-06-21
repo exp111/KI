@@ -44,7 +44,7 @@ function Wumpus:new(startPos, size)
         grid[x] = {}
         for y = 1, size do
             local isStartPos = startPos.x == x and startPos.y == y
-            local isPit = x ~= 1 and y ~= 1 and math.random(10) <= 2 and 1 or 0
+            local isPit = not isStartPos and math.random(10) <= 2 and 1 or 0
             grid[x][y] = Field:new(isStartPos, isPit)
         end
     end
@@ -53,7 +53,10 @@ function Wumpus:new(startPos, size)
     local gold = {x = math.random(size), y = math.random(size)}
     grid[gold.x][gold.y].gold = 1
 
-    local wumpus = {x= math.random(size), y = math.random(size)}
+    local wumpus
+    repeat
+        wumpus = {x= math.random(size), y = math.random(size)}
+    until wumpus.x ~= startPos.x and wumpus.y ~= startPos.y
     grid[wumpus.x][wumpus.y].wumpus = 1
 
     local scoreBoard = {
@@ -191,7 +194,7 @@ function Wumpus:forward()
     end
 end
 
-function Wumpus:getPercept(pos, rotation)
+function Wumpus:getPercept(pos)
     local percept = {breeze = 0, stench = 0, glitter = 0, bump = 0, scream = 0}
     if pos.x < 1 or pos.x > #self.grid or pos.y < 1 or pos.y > #self.grid then --invalid pos
         return percept
