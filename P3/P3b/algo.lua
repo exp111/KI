@@ -124,10 +124,21 @@ function PLResolve(ci, cj)
             con = remove(con, v)
             con = remove(con, neg)
             --print(stringify(con))
-            table.insert(ret, con)
+            if not checkForComplimentary(con) then
+                table.insert(ret, con)
+            end
         end
     end
     return ret
+end
+
+function checkForComplimentary(clause)
+    for _, v in pairs(clause) do
+        if contains(clause, negate(v)) then
+            return true
+        end
+    end
+    return false
 end
 
 function negate(c)
@@ -145,5 +156,5 @@ end
 --print(PLResolution(KB, ALPHA))
 
 --KB = {{"-p21", "b11"}, {"-b11", "p12", "p21"}, {"-p12", "b11"}, {"-b11"}}
---ALPHA = {{"-p12"}}
---print(PLResolution(KB, ALPHA))
+--ALPHA = {{"p12"}}
+--print(PLResolution(KB, ALPHA)) --should be true
