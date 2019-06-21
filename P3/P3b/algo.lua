@@ -41,17 +41,18 @@ function concatUnique(t1, t2)
     return t3
 end
 
-function containsClauses(t1, t2)
+function subsetOf(t1, t2) -- t1 is a subset of t2
     local check = {}
-    for i = 1, #t1 + #t2 do
-        local cur = i <= #t1 and t1[i] or t2[i - #t1]
-        local stringed = stringify(cur)
-        if check[stringed] then
-            return true
-        end
-        check[stringed] = true
+    for _, v in pairs(t2) do
+        check[stringify(v)] = true
     end
-    return false
+    for _, v in pairs(t1) do
+        if check[stringify(v)] ~= true then
+            --print("Not subset bcuz: " .. stringify(v))
+            return false
+        end
+    end
+    return true
 end
 
 function contains(t, e)
@@ -86,14 +87,18 @@ function remove(t, e)
 end
 
 function PLResolution(kb, alpha)
-    local clauses = concat(kb, alpha) -- kb ∧ ¬α
+    for _,v in pairs(kb) do
+        table.sort(v, stringComp)
+    end
+    local clauses = concatUnique(kb, alpha) -- kb ∧ ¬α
     --print("Clauses: " .. stringify(clauses))
+    local new = {}
     while #clauses > 1 do
-        local new = {}
-        for i = 1, #clauses do
-            local ci = clauses[i]
-            for j = i + 1, #clauses do
-                local cj = clauses[j]
+        for i = 1, #clauses do -- for each
+            local ci = clauses[i] --pair of clauses
+            for j = i + 1, #clauses do -- ci, cj
+                local cj = clauses[j] -- in clauses do
+
                 --print("i: " .. i .. ", j: " .. j .. ", Ci: " .. stringify(ci) .. ", Cj: " .. stringify(cj))
                 local resolvents = PLResolve(ci, cj)
                 --print("Resolvents: " .. stringify(resolvents))
@@ -103,19 +108,23 @@ function PLResolution(kb, alpha)
         end
         --print("new: " .. stringify(new))
         --print("clauses: " .. stringify(clauses))
-        if containsClauses(new, clauses) then return false end -- new ⊆ kb
-        clauses = {}
-        clauses = concat(clauses, new)
-        clauses = concat(clauses, alpha)
+
+        if subsetOf(new, clauses) then return false end -- new ⊆ clauses
+        clauses = concatUnique(clauses, new)
+        --print("clauses: " .. stringify(clauses))
     end
     return false
+end
+
+function stringComp(a,b)
+    return a < b
 end
 
 function PLResolve(ci, cj)
     local ret = {}
     --print("PLResolve: ci: " .. stringify(ci) .. ", cj: " .. stringify(cj))
     for k,v in pairs(ci) do
-        local con = concat(ci, cj)
+        local con = concatUnique(ci, cj)
         --print("k: " .. k .. ", cur: " .. v)
         local neg = negate(v)
         
@@ -125,6 +134,7 @@ function PLResolve(ci, cj)
             con = remove(con, neg)
             --print(stringify(con))
             if not checkForComplimentary(con) then
+                table.sort(con, stringComp)
                 table.insert(ret, con)
             end
         end
@@ -151,10 +161,20 @@ function negate(c)
     return neg
 end
 
---KB = {{"x", "y"}, {"-x"}}
---ALPHA = {{"-y"}}
---print(PLResolution(KB, ALPHA))
+local KB
+local ALPHA
+KB = {{"x", "y"}, {"-x"}}
+ALPHA = {{"-y"}}
+assert(PLResolution(KB, ALPHA), "PLResolution failed")
 
---KB = {{"-p21", "b11"}, {"-b11", "p12", "p21"}, {"-p12", "b11"}, {"-b11"}}
---ALPHA = {{"p12"}}
---print(PLResolution(KB, ALPHA)) --should be true
+KB = {{"-p21", "b11"}, {"-b11", "p12", "p21"}, {"-p12", "b11"}, {"-b11"}}
+ALPHA = {{"p12"}}
+assert(PLResolution(KB, ALPHA), "PLResolution failed") --should be true
+
+KB = {{"a", "b", "-d"}, {"a", "b", "c", "d"}, {"-b", "c"}, {"-a"}}
+ALPHA = {{"-c"}}
+assert(PLResolution(KB, ALPHA), "PLResolution failed") --should be true
+
+KB = {{"a", "b", "-d"}, {"a", "b", "c", "d"}, {"-b", "c"}}
+ALPHA = {{"-a"}}
+assert(not PLResolution(KB, ALPHA), "PLResolution failed") --should be false

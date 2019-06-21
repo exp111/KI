@@ -98,7 +98,8 @@ function love.keypressed(key)
         cnf:tell({percept.stench == 1 and "s" .. xy or "-s" .. xy})
     end
 
-    if key == 'l' or key == 'r' or key == 'f' then
+    if key == 'a' then--key == 'l' or key == 'r' or key == 'f' then
+        print("#rules: " .. #cnf.rules)
         danger = checkForDanger()
     end
 end
@@ -122,6 +123,11 @@ function CNF:ask(alpha)
     return PLResolution(self.rules, {{negate(alpha)}})
 end
 
+-- b22 <=> p12 v p21 v p23 v p32
+-- (b22 => p12 v p21 v p23 v p32) n (p12 v p21 v p23 v p32 => b22)
+-- (-b22 v p12 v p21 v p23 v p32) n (-(p12 v p21 v p23 v p32) v b22)
+-- (-b22 v p12 v p21 v p23 v p32) n ((-p12 n -p21 n -p23 n -p32) v b22)
+-- (-b22 v p12 v p21 v p23 v p32) n (-p12 v b22) n (-p21 v b22) n (-p23 v b22) n (-p32 v b22)
 function addRule(cnf, pos, size)
     local arr = {{pos.x, pos.y - 1}, {pos.x - 1, pos.y}, {pos.x + 1, pos.y}, {pos.x, pos.y + 1}}
     local xy = pos.x .. pos.y
@@ -151,8 +157,25 @@ function checkForDanger()
     local nextPos = getNextPos()
     if nextPos.x >= 1 and nextPos.x <= size and nextPos.y >= 1 and nextPos.y <= size then
         local xy = nextPos.x .. nextPos.y
-        ret.wumpus = (cnf:ask("-w" .. xy) and "No" or "Maybe") .. " Wumpus ahead"
-        ret.pit = (cnf:ask("-p" .. xy) and "No" or "Maybe") .. " Pit ahead"
+        ret.wumpus = (cnf:ask("-w" .. xy) and "No " or (cnf:ask("w" .. xy) and "" or "Maybe ")) .. "Wumpus ahead"
+        ret.pit = (cnf:ask("-p" .. xy) and "No" or (cnf:ask("p" .. xy) and "" or "Maybe ")) .. " Pit ahead"
     end
     return ret
 end
+
+--local c = CNF:new()
+--addRule(c, {x = 1, y = 1}, 4)
+--addRule(c, {x = 1, y = 2}, 4)
+--addRule(c, {x = 2, y = 1}, 4)
+--c:tell({"b21"})
+--c:tell({"s12"})
+--c:tell({"-b22"})
+--c:tell({"-s22"})
+--c:tell({"-b11"})
+--c:tell({"-s11"})
+--c:tell({"b21"})
+--c:tell({"-p11"})
+--c:tell({"-p22"})
+--print(stringify(c.rules))
+--print(c:ask("p31"))
+--print(c:ask("w13"))

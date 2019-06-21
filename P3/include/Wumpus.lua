@@ -167,6 +167,8 @@ function Wumpus:action(key)
             return "Can't climb from here"
         end
     end
+
+    return "Unknown Key"
 end
 
 function Wumpus:addScore(val)
