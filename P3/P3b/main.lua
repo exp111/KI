@@ -81,11 +81,16 @@ function love.update()
 end
 
 function love.keypressed(key)
+    local nextPos = getNextPos()
+    local needToAdd = false
+    if wumpus.grid[nextPos.x] ~= nil and wumpus.grid[nextPos.x][nextPos.y] ~= nil and wumpus.grid[nextPos.x][nextPos.y].visited == 0 then
+        needToAdd = true
+    end
     eventText = wumpus:action(key)
     if wumpus.player.dead == 1 or wumpus.finished == 1 then
         return
     end
-    if key == 'f' then
+    if needToAdd and key == 'f' then
         addRule(cnf, wumpus.player.pos, size)
         local percept = wumpus:getPercept(wumpus.player.pos)
         local xy = wumpus.player.pos.x .. wumpus.player.pos.y
@@ -112,7 +117,8 @@ function CNF:tell(rule) -- clauses: {"x", "y", "-x"}
 end
 
 function CNF:ask(alpha)
-    --print(stringify(self.rules))
+    --print("Rules: " .. stringify(self.rules))
+    --print("Alpha: " .. negate(alpha))
     return PLResolution(self.rules, {{negate(alpha)}})
 end
 
@@ -134,10 +140,15 @@ function addRule(cnf, pos, size)
     cnf:tell(ruleS) --TODO: maybe add same tile too?
 end
 
-function checkForDanger()
-    local ret = {}
+function getNextPos()
     local delta = wumpus:getDelta(wumpus.player.rotation)
     local nextPos = { x = wumpus.player.pos.x + delta.x, y = wumpus.player.pos.y + delta.y }
+    return nextPos
+end
+
+function checkForDanger()
+    local ret = {}
+    local nextPos = getNextPos()
     if nextPos.x >= 1 and nextPos.x <= size and nextPos.y >= 1 and nextPos.y <= size then
         local xy = nextPos.x .. nextPos.y
         ret.wumpus = (cnf:ask("-w" .. xy) and "No" or "Maybe") .. " Wumpus ahead"
