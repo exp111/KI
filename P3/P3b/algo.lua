@@ -123,19 +123,20 @@ end
 function PLResolve(ci, cj)
     local ret = {}
     --print("PLResolve: ci: " .. stringify(ci) .. ", cj: " .. stringify(cj))
+    local concated = concatUnique(ci, cj)
     for k,v in pairs(ci) do
-        local con = concatUnique(ci, cj)
+        local cur = copy(concated)
         --print("k: " .. k .. ", cur: " .. v)
         local neg = negate(v)
         
         if contains(cj, neg) then --search for opposite clause
             --print("Resolved: " .. v)
-            con = remove(con, v)
-            con = remove(con, neg)
-            --print(stringify(con))
-            if not checkForComplimentary(con) then
-                table.sort(con, stringComp)
-                table.insert(ret, con)
+            cur = remove(cur, v)
+            cur = remove(cur, neg)
+            --print(stringify(cur))
+            if not checkForComplimentary(cur) then
+                table.sort(cur, stringComp)
+                table.insert(ret, cur)
             end
         end
     end
@@ -180,9 +181,13 @@ ALPHA = {{"-a"}}
 assert(not PLResolution(KB, ALPHA), "PLResolution failed") --should be false
 
 KB = {{"a", "b", "-d"}, {"a", "b", "c", "d"}, {"-b", "c"}}
-ALPHA = {{"-a"}}
+ALPHA = {{"-a"}, {"a", "b", "-d"}}
 assert(not subsetOf(KB, ALPHA), "subsetOf failed")
 
 KB = {{"a", "b", "c", "d"}}
+ALPHA = {{"a", "b", "-d"}, {"a", "b", "c", "d"}, {"-b", "c"}}
+assert(subsetOf(KB, ALPHA), "subsetOf failed")
+
+KB = {}
 ALPHA = {{"a", "b", "-d"}, {"a", "b", "c", "d"}, {"-b", "c"}}
 assert(subsetOf(KB, ALPHA), "subsetOf failed")

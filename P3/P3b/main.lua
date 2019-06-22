@@ -160,7 +160,7 @@ function checkForDanger()
     if nextPos.x >= 1 and nextPos.x <= size and nextPos.y >= 1 and nextPos.y <= size then
         local xy = nextPos.x .. nextPos.y
         ret.wumpus = (cnf:ask("-w" .. xy) and "No " or (cnf:ask("w" .. xy) and "" or "Maybe ")) .. "Wumpus ahead"
-        ret.pit = (cnf:ask("-p" .. xy) and "No" or (cnf:ask("p" .. xy) and "" or "Maybe ")) .. " Pit ahead"
+        ret.pit = (cnf:ask("-p" .. xy) and "No " or (cnf:ask("p" .. xy) and "" or "Maybe ")) .. "Pit ahead"
     end
     return ret
 end
