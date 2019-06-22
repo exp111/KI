@@ -222,6 +222,7 @@ function Wumpus:getPercept(pos)
         end
     end
     percept.glitter = self.grid[pos.x][pos.y].gold == 1 and 1 or 0
+    percept.breeze = percept.breeze == 1 and 1 or self.grid[wumpus.player.pos.x][wumpus.player.pos.y].pit == 1 and 1 or 0
     percept.stench = percept.stench == 1 and 1 or self.grid[wumpus.player.pos.x][wumpus.player.pos.y].wumpus == 1 and 1 or 0
     percept.scream = self.scream
     percept.bump = self.player.bump

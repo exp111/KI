@@ -133,17 +133,19 @@ function addRule(cnf, pos, size)
     local xy = pos.x .. pos.y
     local ruleB = {"-b" .. xy}
     local ruleS = {"-s" .. xy}
+    cnf:tell({"b" .. xy, "-p" .. xy}) -- if there's no smell there is no pit on the same tile
+    cnf:tell({"s" .. xy, "-w" .. xy}) -- if there's no smell there is no pit on the same tile
     for _, v in pairs(arr) do
         if v[1] >= 1 and v[1] <= size and v[2] >= 1 and v[2] <= size then
             local v12 = v[1] .. v[2]
             table.insert(ruleB, "p" .. v12)
             table.insert(ruleS, "w" .. v12)
-            cnf:tell({"-p" .. v12, "b" .. xy})
-            cnf:tell({"-w" .. v12, "s" .. xy})
+            cnf:tell({"b" .. xy, "-p" .. v12})
+            cnf:tell({"s" .. xy, "-w" .. v12})
         end
     end
     cnf:tell(ruleB)
-    cnf:tell(ruleS) --TODO: maybe add same tile too?
+    cnf:tell(ruleS)
 end
 
 function getNextPos()
@@ -167,15 +169,18 @@ end
 --addRule(c, {x = 1, y = 1}, 4)
 --addRule(c, {x = 1, y = 2}, 4)
 --addRule(c, {x = 2, y = 1}, 4)
---c:tell({"b21"})
---c:tell({"s12"})
 --c:tell({"-b22"})
---c:tell({"-s22"})
 --c:tell({"-b11"})
---c:tell({"-s11"})
+--c:tell({"-b12"})
 --c:tell({"b21"})
 --c:tell({"-p11"})
 --c:tell({"-p22"})
 --print(stringify(c.rules))
---print(c:ask("p31"))
---print(c:ask("w13"))
+--print(c:ask("p31")) --true
+
+--c = CNF:new()
+--addRule(c, {x = 1, y = 1}, 4)
+--addRule(c, {x = 2, y = 1}, 4)
+--c:tell({"b11"})
+--c:tell({"-b21"})
+--print(c:ask("p12")) --should be true

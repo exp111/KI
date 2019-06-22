@@ -178,3 +178,11 @@ assert(PLResolution(KB, ALPHA), "PLResolution failed") --should be true
 KB = {{"a", "b", "-d"}, {"a", "b", "c", "d"}, {"-b", "c"}}
 ALPHA = {{"-a"}}
 assert(not PLResolution(KB, ALPHA), "PLResolution failed") --should be false
+
+KB = {{"a", "b", "-d"}, {"a", "b", "c", "d"}, {"-b", "c"}}
+ALPHA = {{"-a"}}
+assert(not subsetOf(KB, ALPHA), "subsetOf failed")
+
+KB = {{"a", "b", "c", "d"}}
+ALPHA = {{"a", "b", "-d"}, {"a", "b", "c", "d"}, {"-b", "c"}}
+assert(subsetOf(KB, ALPHA), "subsetOf failed")
