@@ -1,5 +1,5 @@
 dofile("include/Wumpus.lua")
-dofile("P3b/algo.lua")
+dofile("P3c/algo.lua")
 
 function love.load()
     math.randomseed(os.time())
@@ -21,19 +21,9 @@ function love.load()
     halfPi = math.pi / 2
     twoPi = math.pi * 2
 
-    cnf = CNF:new()
-    local percept = wumpus:getPercept(wumpus.player.pos)
-    local xy = wumpus.player.pos.x .. wumpus.player.pos.y
-    if percept.breeze == 1 then
-        cnf:tell({"b" .. xy})
-        addRule(cnf, wumpus.player.pos, size, "b", "p")
-    end
-    if percept.stench == 1 then
-        cnf:tell({"s" .. xy})
-        addRule(cnf, wumpus.player.pos, size, "s", "w")
-    end
-
-    danger = checkForDanger()
+    horn = Horn:new()
+    HornTell({x = 1, y = 1})
+    setHorn()
 end
 
 function love.draw()
@@ -75,11 +65,6 @@ function love.draw()
     love.graphics.print(perceptString, 10, barPosY + 15)
     love.graphics.print("Action: (F, L, R, G, S or C)?", 10, barPosY + 30)
     love.graphics.print(eventText, 10, barPosY + 45)
-
-    if danger.wumpus ~= nil then
-        love.graphics.print(danger.wumpus, 200, barPosY + 30)
-        love.graphics.print(danger.pit, 200, barPosY + 45)
-    end
 end
 
 function love.update()
@@ -96,61 +81,104 @@ function love.keypressed(key)
         return
     end
     if needToAdd and key == 'f' then
-        local percept = wumpus:getPercept(wumpus.player.pos)
-        local xy = wumpus.player.pos.x .. wumpus.player.pos.y
-        if percept.breeze == 1 then
-            cnf:tell({"b" .. xy})
-            addRule(cnf, wumpus.player.pos, size, "b", "p")
-        end
-        if percept.stench == 1 then
-            cnf:tell({"s" .. xy})
-            addRule(cnf, wumpus.player.pos, size, "s", "w")
-        end
+        HornTell(nextPos)
     end
 
-    if key == 'a' then--key == 'l' or key == 'r' or key == 'f' then
-        print("#rules: " .. #cnf.rules)
-        danger = checkForDanger()
+    if key == 'a' then
+        local danger = checkForDanger()
+        print(danger.pit)
+        print(danger.wumpus)
     end
 end
 
-CNF = {}
-local CNF_mt = Class(CNF)
+Horn = {}
+local Horn_mt = Class(Horn)
 
-function CNF:new()
+function Horn:new()
     return setmetatable({
         rules = {}
-        }, CNF_mt)
+        }, Horn_mt)
 end
 
-function CNF:tell(rule) -- clauses: {"x", "y", "-x"}
-    table.insert(self.rules, rule)
+function Horn:tell(premise, conclusion) -- clauses: {A, B => C}
+    table.insert(HC:new(premise, conclusion), rule)
 end
 
-function CNF:ask(alpha)
-    --print("Rules: " .. stringify(self.rules))
-    --print("Alpha: " .. negate(alpha))
-    return PLResolution(self.rules, {{negate(alpha)}})
+function Horn:ask(q)
+    return PLFCEntails(self.rules, q)
 end
 
--- b22 <=> p12 v p21 v p23 v p32
--- (b22 => p12 v p21 v p23 v p32) n (p12 v p21 v p23 v p32 => b22)
--- (-b22 v p12 v p21 v p23 v p32) n (-(p12 v p21 v p23 v p32) v b22)
--- (-b22 v p12 v p21 v p23 v p32) n ((-p12 n -p21 n -p23 n -p32) v b22)
--- (-b22 v p12 v p21 v p23 v p32) n (-p12 v b22) n (-p21 v b22) n (-p23 v b22) n (-p32 v b22)
-function addRule(cnf, pos, size, b, p)
-    local arr = {{pos.x, pos.y - 1}, {pos.x - 1, pos.y}, {pos.x + 1, pos.y}, {pos.x, pos.y + 1}}
-    local xy = pos.x .. pos.y
-    local rule = {"-" .. b .. xy}
-    cnf:tell({b .. xy, "-" .. p .. xy}) -- if there's no smell there is no pit on the same tile
-    for _, v in pairs(arr) do
-        if v[1] >= 1 and v[1] <= size and v[2] >= 1 and v[2] <= size then
-            local v12 = v[1] .. v[2]
-            table.insert(rule, p .. v12)
-            cnf:tell({b .. xy, "-" .. p.. v12})
+HC = {}
+local HC_mt = Class(HC_mt)
+
+function HC:new(premise, conclusion)
+    return setmetatable({
+        premise = premise or {},
+        conclusion = conclusion
+    }, HK_mt)
+end
+
+function HornTell(pos)
+    horn:tell({},'-p' .. pos.x .. pos.y)
+    horn:tell({},'-w' .. pos.x .. pos.y)
+
+    local percept = wumpus:getPercept(pos)
+    if percept.stench == 1 then
+        horn:tell({},'s' .. pos.x .. pos.y)
+    end
+    if percept.breeze == 1 then
+        horn:tell({},'b' .. pos.x .. pos.y)
+    end
+end
+
+function setHorn()
+    for x = 1, 4 do
+        for y = 1, 4 do
+
+            local sur = get_surrounding_fields(x,y)
+            setHRules(sur, x, y)
+        end        
+    end
+end
+
+function setHRules(sur,cx,cy)
+
+    local ls = {'s','b'}
+    local xs = {'w','p'}
+
+    for i =1, 2 do 
+        for x = 1, #sur do
+
+            local h = HC:new()
+            h.conclusion = xs[i] .. sur[x]
+            table.insert(h.premise , ls[i] .. cx..cy)
+
+            for y = 1, #sur do
+                if y ~= x then
+                    table.insert(h.premise , '-' .. xs[i] .. sur[y])                    
+                end
+            end
+            horn:tell(h.premise,h.conclusion)
         end
     end
-    cnf:tell(rule)
+end
+
+function get_surrounding_fields(x,y)
+    local sur = {}
+    
+    if y + 1 <= size then
+        table.insert(sur, x..(y+1))
+    end
+    if y - 1 >= 1 then        
+        table.insert(sur, x..(y-1))
+    end
+    if x + 1 <= size then
+        table.insert(sur, (x+1)..y)
+    end
+    if x - 1 >= 1 then
+        table.insert(sur, (x-1)..y)
+    end
+    return sur
 end
 
 function getNextPos()
@@ -164,28 +192,8 @@ function checkForDanger()
     local nextPos = getNextPos()
     if nextPos.x >= 1 and nextPos.x <= size and nextPos.y >= 1 and nextPos.y <= size then
         local xy = nextPos.x .. nextPos.y
-        ret.wumpus = (cnf:ask("w" .. xy) and "" or "Maybe ") .. "Wumpus ahead"
-        ret.pit = (cnf:ask("p" .. xy) and "" or "Maybe ") .. "Pit ahead"
+        ret.wumpus = (horn:ask("w" .. xy) and "" or (horn:ask("-w" .. xy) and "No " or "Maybe ")) .. "Wumpus ahead"
+        ret.pit = (horn:ask("p" .. xy) and "" or (horn:ask("-p" .. xy) and "No " or "Maybe ")) .. "Pit ahead"
     end
     return ret
 end
-
---local c = CNF:new()
---addRule(c, {x = 1, y = 1}, 4)
---addRule(c, {x = 1, y = 2}, 4)
---addRule(c, {x = 2, y = 1}, 4)
---c:tell({"-b22"})
---c:tell({"-b11"})
---c:tell({"-b12"})
---c:tell({"b21"})
---c:tell({"-p11"})
---c:tell({"-p22"})
---print(stringify(c.rules))
---print(c:ask("p31")) --true
-
---c = CNF:new()
---addRule(c, {x = 1, y = 1}, 4)
---addRule(c, {x = 2, y = 1}, 4)
---c:tell({"b11"})
---c:tell({"-b21"})
---print(c:ask("p12")) --should be true
