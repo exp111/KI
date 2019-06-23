@@ -20,7 +20,6 @@ function contains(t, e)
     return false
 end
 
-
 function PLFCEntails(kb, q)
     local count = GetCount(kb) -- count[c]
     local inferred = {} -- inferred[s] is nil/false as default value
@@ -47,7 +46,7 @@ end
 function GetCount(kb)
     local ret = {}
     for _, v in pairs(kb) do
-        ret[v.id] = #v.premise
+        ret[v] = #v.premise
     end
     return ret
 end
@@ -56,7 +55,7 @@ function InitAgenda(kb)
     local ret = {}
     for _,v in pairs(kb) do
         if #v.premise == 0 then
-            table.insert(ret, v)
+            table.insert(ret, v.conclusion)
         end
     end
     return ret

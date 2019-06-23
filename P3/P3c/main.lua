@@ -2,7 +2,8 @@ dofile("include/Wumpus.lua")
 dofile("P3c/algo.lua")
 
 function love.load()
-    math.randomseed(os.time())
+    --math.randomseed(os.time())
+    math.randomseed(1337)
 
     wumpus = Wumpus:new({x = 1, y = 1}, 4)
     size = #wumpus.grid
@@ -101,7 +102,7 @@ function Horn:new()
 end
 
 function Horn:tell(premise, conclusion) -- clauses: {A, B => C}
-    table.insert(HC:new(premise, conclusion), rule)
+    table.insert(self.rules, HC:new(premise, conclusion))
 end
 
 function Horn:ask(q)
