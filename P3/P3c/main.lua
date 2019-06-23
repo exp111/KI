@@ -25,6 +25,8 @@ function love.load()
     horn = Horn:new()
     HornTell({x = 1, y = 1})
     setHorn()
+
+    danger = checkForDanger()
 end
 
 function love.draw()
@@ -66,6 +68,11 @@ function love.draw()
     love.graphics.print(perceptString, 10, barPosY + 15)
     love.graphics.print("Action: (F, L, R, G, S or C)?", 10, barPosY + 30)
     love.graphics.print(eventText, 10, barPosY + 45)
+
+    if danger.wumpus ~= nil then
+        love.graphics.print(danger.wumpus, 200, barPosY + 30)
+        love.graphics.print(danger.pit, 200, barPosY + 45)
+    end
 end
 
 function love.update()
@@ -85,10 +92,8 @@ function love.keypressed(key)
         HornTell(nextPos)
     end
 
-    if key == 'a' then
-        local danger = checkForDanger()
-        print(danger.pit)
-        print(danger.wumpus)
+    if key == 'f' or key == 'r' or key == 'l' then
+        danger = checkForDanger()
     end
 end
 
@@ -135,7 +140,6 @@ end
 function setHorn()
     for x = 1, 4 do
         for y = 1, 4 do
-
             local sur = get_surrounding_fields(x,y)
             setHRules(sur, x, y)
         end        
@@ -193,8 +197,8 @@ function checkForDanger()
     local nextPos = getNextPos()
     if nextPos.x >= 1 and nextPos.x <= size and nextPos.y >= 1 and nextPos.y <= size then
         local xy = nextPos.x .. nextPos.y
-        ret.wumpus = (horn:ask("w" .. xy) and "" or (horn:ask("-w" .. xy) and "No " or "Maybe ")) .. "Wumpus ahead"
-        ret.pit = (horn:ask("p" .. xy) and "" or (horn:ask("-p" .. xy) and "No " or "Maybe ")) .. "Pit ahead"
+        ret.wumpus = (horn:ask("w" .. xy) and "" or "Maybe ") .. "Wumpus ahead"
+        ret.pit = (horn:ask("p" .. xy) and "" or "Maybe ") .. "Pit ahead"
     end
     return ret
 end
