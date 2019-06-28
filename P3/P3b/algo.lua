@@ -9,7 +9,7 @@ function stringify(o)
     else
        return tostring(o)
     end
- end
+end
 
 function copy(t)
     local newT = {}
