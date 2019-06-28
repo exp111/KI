@@ -23,16 +23,7 @@ function love.load()
     twoPi = math.pi * 2
 
     cnf = CNF:new()
-    local percept = wumpus:getPercept(wumpus.player.pos)
-    local xy = wumpus.player.pos.x .. wumpus.player.pos.y
-    if percept.breeze == 1 then
-        cnf:tell({"b" .. xy})
-        addRule(cnf, wumpus.player.pos, size, "b", "p")
-    end
-    if percept.stench == 1 then
-        cnf:tell({"s" .. xy})
-        addRule(cnf, wumpus.player.pos, size, "s", "w")
-    end
+    tellKb(cnf, {x = 1, y = 1})
 
     danger = checkForDanger()
 end
@@ -99,21 +90,31 @@ function love.keypressed(key)
         return
     end
     if needToAdd and key == 'f' then
-        local percept = wumpus:getPercept(wumpus.player.pos)
-        local xy = wumpus.player.pos.x .. wumpus.player.pos.y
-        if percept.breeze == 1 then
-            cnf:tell({"b" .. xy})
-            addRule(cnf, wumpus.player.pos, size, "b", "p")
-        end
-        if percept.stench == 1 then
-            cnf:tell({"s" .. xy})
-            addRule(cnf, wumpus.player.pos, size, "s", "w")
-        end
+        tellKb(cnf, wumpus.player.pos)
     end
 
     if key == 'a' then--key == 'l' or key == 'r' or key == 'f' then
         print("#rules: " .. #cnf.rules)
         danger = checkForDanger()
+    end
+end
+
+function tellKb(cnf, pos)
+    local percept = wumpus:getPercept(pos)
+    local xy = pos.x .. pos.y
+    cnf:tell({"-w" .. xy})
+    cnf:tell({"-p" .. xy})
+    if percept.breeze == 1 then
+        cnf:tell({"b" .. xy})
+        addRule(cnf, pos, size, "b", "p")
+    else
+        cnf:tell({"-b" .. xy})
+    end
+    if percept.stench == 1 then
+        cnf:tell({"s" .. xy})
+        addRule(cnf, pos, size, "s", "w")
+    else
+        cnf:tell({"-s" .. xy})
     end
 end
 
@@ -145,7 +146,7 @@ function addRule(cnf, pos, size, b, p)
     local arr = {{pos.x, pos.y - 1}, {pos.x - 1, pos.y}, {pos.x + 1, pos.y}, {pos.x, pos.y + 1}}
     local xy = pos.x .. pos.y
     local rule = {"-" .. b .. xy}
-    cnf:tell({b .. xy, "-" .. p .. xy}) -- if there's no smell there is no pit on the same tile
+    --cnf:tell({b .. xy, "-" .. p .. xy}) -- if there's no smell there is no pit on the same tile
     for _, v in pairs(arr) do
         if v[1] >= 1 and v[1] <= size and v[2] >= 1 and v[2] <= size then
             local v12 = v[1] .. v[2]
@@ -167,11 +168,11 @@ function checkForDanger()
     local nextPos = getNextPos()
     if nextPos.x >= 1 and nextPos.x <= size and nextPos.y >= 1 and nextPos.y <= size then
         local xy = nextPos.x .. nextPos.y
-        local wumpus = cnf:ask("-w" .. xy)
-        local pit = cnf:ask("-p" .. xy)
-        ret.wumpus = (wumpus and "No " or "Maybe ") .. "Wumpus ahead"
+        local wumpus = cnf:ask("w" .. xy)
+        local pit = cnf:ask("p" .. xy)
+        ret.wumpus = (wumpus and "" or "Maybe ") .. "Wumpus ahead"
         ret.wumpusColor = wumpus and {1, 0, 0} or {0, 0, 0} 
-        ret.pit = (pit and "No " or "Maybe ") .. "Pit ahead"
+        ret.pit = (pit and "" or "Maybe ") .. "Pit ahead"
         ret.pitColor = pit and {1, 0, 0} or {0, 0, 0}
     end
     return ret
