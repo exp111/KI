@@ -23,8 +23,8 @@ function love.load()
     twoPi = math.pi * 2
 
     horn = Horn:new()
-    HornTell({x = 1, y = 1})
-    setHorn()
+    tellHornPercept({x = 1, y = 1})
+    initHorn(horn, size)
 
     danger = checkForDanger()
 end
@@ -70,7 +70,9 @@ function love.draw()
     love.graphics.print(eventText, 10, barPosY + 45)
 
     if danger.wumpus ~= nil then
+        love.graphics.setColor(danger.wumpusColor)
         love.graphics.print(danger.wumpus, 200, barPosY + 30)
+        love.graphics.setColor(danger.pitColor)
         love.graphics.print(danger.pit, 200, barPosY + 45)
     end
 end
@@ -89,7 +91,7 @@ function love.keypressed(key)
         return
     end
     if needToAdd and key == 'f' then
-        HornTell(nextPos)
+        tellHornPercept(nextPos)
     end
 
     if key == 'f' or key == 'r' or key == 'l' then
@@ -110,6 +112,10 @@ function Horn:tell(premise, conclusion) -- clauses: {A, B => C}
     table.insert(self.rules, HC:new(premise, conclusion))
 end
 
+function Horn:tellClause(hc)
+    table.insert(self.rules, hc)
+end
+
 function Horn:ask(q)
     return PLFCEntails(self.rules, q)
 end
@@ -124,64 +130,64 @@ function HC:new(premise, conclusion)
     }, HK_mt)
 end
 
-function HornTell(pos)
-    horn:tell({},'-p' .. pos.x .. pos.y)
-    horn:tell({},'-w' .. pos.x .. pos.y)
-
+function tellHornPercept(pos)
     local percept = wumpus:getPercept(pos)
     if percept.stench == 1 then
         horn:tell({},'s' .. pos.x .. pos.y)
+    else
+        horn:tell({}, '-s' .. pos.x .. pos.y)
     end
     if percept.breeze == 1 then
         horn:tell({},'b' .. pos.x .. pos.y)
+    else
+        horn:tell({},'-b' .. pos.x .. pos.y)
     end
 end
 
-function setHorn()
-    for x = 1, 4 do
-        for y = 1, 4 do
-            local sur = get_surrounding_fields(x,y)
-            setHRules(sur, x, y)
+function initHorn(horn, size)
+    for x = 1, size do
+        for y = 1, size do
+            local pos = { x = x, y = y }
+            local sur = getSurroundingFields(pos, size)
+            addRule(horn, sur, pos)
         end        
     end
 end
 
-function setHRules(sur,cx,cy)
+function addRule(horn, sur, center)
+    local sense = {'s', 'b'}
+    local concl = {'w', 'p'}
 
-    local ls = {'s','b'}
-    local xs = {'w','p'}
-
-    for i =1, 2 do 
+    for i = 1, #sense do 
         for x = 1, #sur do
-
             local h = HC:new()
-            h.conclusion = xs[i] .. sur[x]
-            table.insert(h.premise , ls[i] .. cx..cy)
+            h.conclusion = concl[i] .. sur[x]
+            table.insert(h.premise , sense[i] .. center.x .. center.y)
 
-            for y = 1, #sur do
+            for y = 1, #sur do -- s11, -s21 => w12; s22, -s21, -s32, -s12 => w23
                 if y ~= x then
-                    table.insert(h.premise , '-' .. xs[i] .. sur[y])                    
+                    table.insert(h.premise , '-' .. sense[i] .. sur[y])                    
                 end
             end
-            horn:tell(h.premise,h.conclusion)
+            horn:tellClause(h)
         end
     end
 end
 
-function get_surrounding_fields(x,y)
+function getSurroundingFields(pos, size)
     local sur = {}
     
-    if y + 1 <= size then
-        table.insert(sur, x..(y+1))
+    if pos.y + 1 <= size then
+        table.insert(sur, pos.x .. pos.y + 1)
     end
-    if y - 1 >= 1 then        
-        table.insert(sur, x..(y-1))
+    if pos.y - 1 >= 1 then        
+        table.insert(sur, pos.x .. pos.y - 1)
     end
-    if x + 1 <= size then
-        table.insert(sur, (x+1)..y)
+    if pos.x + 1 <= size then
+        table.insert(sur, pos.x + 1 .. pos.y)
     end
-    if x - 1 >= 1 then
-        table.insert(sur, (x-1)..y)
+    if pos.x - 1 >= 1 then
+        table.insert(sur, pos.x - 1 .. pos.y)
     end
     return sur
 end
@@ -197,8 +203,12 @@ function checkForDanger()
     local nextPos = getNextPos()
     if nextPos.x >= 1 and nextPos.x <= size and nextPos.y >= 1 and nextPos.y <= size then
         local xy = nextPos.x .. nextPos.y
-        ret.wumpus = (horn:ask("w" .. xy) and "" or "Maybe ") .. "Wumpus ahead"
-        ret.pit = (horn:ask("p" .. xy) and "" or "Maybe ") .. "Pit ahead"
+        local wumpus = horn:ask("w" .. xy)
+        local pit = horn:ask("p" .. xy)
+        ret.wumpus = (wumpus and "" or "Maybe ") .. "Wumpus ahead"
+        ret.wumpusColor = wumpus and {1, 0, 0} or {0, 0, 0} 
+        ret.pit = (pit and "" or "Maybe ") .. "Pit ahead"
+        ret.pitColor = pit and {1, 0, 0} or {0, 0, 0}
     end
     return ret
 end

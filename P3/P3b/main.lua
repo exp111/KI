@@ -2,7 +2,8 @@ dofile("include/Wumpus.lua")
 dofile("P3b/algo.lua")
 
 function love.load()
-    math.randomseed(os.time())
+    --math.randomseed(os.time())
+    math.randomseed(1337)
 
     wumpus = Wumpus:new({x = 1, y = 1}, 4)
     size = #wumpus.grid
@@ -77,7 +78,9 @@ function love.draw()
     love.graphics.print(eventText, 10, barPosY + 45)
 
     if danger.wumpus ~= nil then
+        love.graphics.setColor(danger.wumpusColor)
         love.graphics.print(danger.wumpus, 200, barPosY + 30)
+        love.graphics.setColor(danger.pitColor)
         love.graphics.print(danger.pit, 200, barPosY + 45)
     end
 end
@@ -164,8 +167,12 @@ function checkForDanger()
     local nextPos = getNextPos()
     if nextPos.x >= 1 and nextPos.x <= size and nextPos.y >= 1 and nextPos.y <= size then
         local xy = nextPos.x .. nextPos.y
-        ret.wumpus = (cnf:ask("w" .. xy) and "" or "Maybe ") .. "Wumpus ahead"
-        ret.pit = (cnf:ask("p" .. xy) and "" or "Maybe ") .. "Pit ahead"
+        local wumpus = cnf:ask("-w" .. xy)
+        local pit = cnf:ask("-p" .. xy)
+        ret.wumpus = (wumpus and "No " or "Maybe ") .. "Wumpus ahead"
+        ret.wumpusColor = wumpus and {1, 0, 0} or {0, 0, 0} 
+        ret.pit = (pit and "No " or "Maybe ") .. "Pit ahead"
+        ret.pitColor = pit and {1, 0, 0} or {0, 0, 0}
     end
     return ret
 end
