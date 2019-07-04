@@ -13,4 +13,8 @@ local problem = read.problem
 --print(stringify(initState(problem.init[1])))
 --print(#GetActions(domain.acts[2], {"a", "b", "c"}))
 InitActions(domain, problem)
-print(ProgressionPlanning(problem))
+local goal = ProgressionPlanning(problem)
+while goal.parent ~= nil do
+   print(goal.action.name .. " " .. stringify(goal.action.params))
+   goal = goal.parent
+end

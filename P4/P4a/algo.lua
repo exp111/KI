@@ -6,6 +6,8 @@ local Node_mt = Class(Node_mt)
 
 function Node:new(state)
     return setmetatable({
+        action = nilm,
+        parent = nil,
         state = state,
         actions = {}
     }, Node_mt)
@@ -137,21 +139,22 @@ function ProgressionPlanning(problem)
 
     while not q:empty() do
         local cur = q:pop()
-        print("Cur: " .. stringify(cur.state))
-        print("Actions:")
-        for _, v in pairs(cur.actions) do
-            print(stringify(v))
-            local next = Node:new(doEffects(cur.state, v.effects))
-            print("Next: " .. stringify(next.state))
+        --print("Cur: " .. stringify(cur.state))
+        --print("Actions:")
+        for _, action in pairs(cur.actions) do
+            --print(action.name .. stringify(action.params))
+            local next = Node:new(doEffects(cur.state, action.effects))
+            --print("Next: " .. stringify(next.state))
 
             if not explored[stringify(next)] then
+                next.parent = cur
+                next.action = action
                 if isGoal(next.state, goal) then
-                    print("Found Goal: " .. stringify(next.state))
-                    return true
+                    --print("Found Goal: " .. stringify(next.state))
+                    return next
                 end
 
                 next.actions = GetDoableActions(next.state, ACTIONS)
-                --TODO: add path
                 q:push(next)
             end
         end
@@ -195,9 +198,19 @@ end
 
 function doEffects(state, effects)
     local ret = {}
+    local done = {}
     for _, v in pairs(state) do
+        local negated = negate(v)
         if not contains(effects, negate(v)) then
             table.insert(ret, v)
+        else
+            done[stringify(negate(v))] = true
+        end
+    end
+
+    for _, effect in pairs(effects) do
+        if not done[stringify(effect)] then
+            table.insert(ret, effect)
         end
     end
 
